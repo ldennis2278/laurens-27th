@@ -1,25 +1,18 @@
-# 🎈 Blank app template
+# Out Tonight
 
-A simple Streamlit app template for you to modify!
+A small shared dashboard for a three-stop bar crawl. The host can check in at a stop or opt in to sharing browser GPS; friends use a view-only link to see the latest status and map.
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://blank-app-template.streamlit.app/)
+## Run locally
 
-### How to run it on your own machine
+Requires Python 3.14 or newer and `uv`.
 
-Prerequisite: install `uv` if you don't already have it.
-
+```sh
+uv sync
+uv run streamlit run streamlit_app.py
 ```
-$ curl -LsSf https://astral.sh/uv/install.sh | sh
-```
 
-1. Sync the dependencies
+Open the app, name the three stops, and start a crawl. Copy the crew link for friends. Check-ins share the chosen stop; GPS sharing is off by default and can be paused at any time. Browser GPS requires location permission and a secure context (HTTPS, or localhost).
 
-   ```
-   $ uv sync
-   ```
+## Deployment
 
-2. Run the app
-
-   ```
-   $ uv run streamlit run streamlit_app.py
-   ```
+The app stores crawl state in SQLite. Set `CRAWL_DB_PATH` to a writable persistent location when deploying, and back it up according to your needs. SQLite must be available to every app replica using the same database file, so use a single app instance unless you replace the storage layer with a network database. Anyone with a crew link can see its check-ins and shared coordinates; share it only with your group.

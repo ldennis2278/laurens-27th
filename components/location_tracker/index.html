@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { margin: 0; color: #63726d; font: 12px -apple-system, BlinkMacSystemFont, sans-serif; }
+      #message { padding: 8px 0; }
+    </style>
+  </head>
+  <body>
+    <div id="message"></div>
+    <script>
+      const message = document.getElementById("message");
+      let watchId = null;
+      let lastSentAt = 0;
+
+      function send(type, value) {
+        window.parent.postMessage({ isStreamlitMessage: true, type, ...value }, "*");
+      }
+
+      function stopTracking() {
+        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+        lastSentAt = 0;
+      }
+
+      function startTracking(intervalSeconds) {
+        if (!navigator.geolocation) {
+          message.textContent = "Location is not supported by this browser.";
+          return;
+        }
+        if (watchId !== null) return;
+        message.textContent = "Waiting for browser location permission…";
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            const now = Date.now();
+            if (now - lastSentAt < intervalSeconds * 1000) return;
+            lastSentAt = now;
+            message.textContent = "Live location is sharing.";
+            send("streamlit:setComponentValue", {
+              value: {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                timestamp: position.timestamp,
+              },
+            });
+          },
+          (error) => {
+            message.textContent = error.code === 1
+              ? "Location permission was denied. Allow it in your browser to share GPS."
+              : "Waiting for a GPS location…";
+          },
+          { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
+        );
+      }
+
+      window.addEventListener("message", (event) => {
+        if (event.data.type !== "streamlit:render") return;
+        const args = event.data.args || {};
+        if (args.enabled) startTracking(args.interval_seconds || 15);
+        else {
+          stopTracking();
+          message.textContent = "Live GPS is paused.";
+        }
+      });
+
+      send("streamlit:componentReady", { apiVersion: 1 });
+      send("streamlit:setFrameHeight", { height: 36 });
+    </script>
+  </body>
+</html>

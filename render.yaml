@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: laurens-birthday-crawl
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: 8501
+      - key: CRAWL_DB_PATH
+        value: /data/crawl.sqlite3
+    disk:
+      name: crawl-db
+      mountPath: /data
+      sizeGB: 1
